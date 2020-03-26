@@ -1,0 +1,48 @@
+﻿<Window x:Class="TC_Prism.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:prism="http://prismlibrary.com/"
+        prism:ViewModelLocator.AutoWireViewModel="True"
+        xmlns:local="clr-namespace:TC_Prism"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <ListView
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            ItemsSource="{Binding Connections}"
+            SelectedItem="{Binding SelectedConnection}">
+            <ListView.View>
+                <GridView AllowsColumnReorder="False">
+                    <GridViewColumn DisplayMemberBinding="{Binding Path=Name}" Header="Connection Name" Width="150"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding Path=HostName}" Header="Host Name" Width="200"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding Path=IPAddress}" Header="IP Address" Width="100"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding Path=AdsAddress}" Header="ADS Address" Width="Auto"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Button
+            Grid.Row="2" Grid.Column="0" Width="80" Height="40"
+            Command="{Binding CommandLoad}"
+            Content="Load Connections"
+        />
+        <Button
+            Grid.Row="2" Grid.Column="1" Width="80" Height="40"
+            Command="{Binding CommandConnect}"
+            Content="Connect"
+        />
+    </Grid>
+</Window>
