@@ -10,11 +10,16 @@ using System.Threading.Tasks;
 using TwinCAT.Ads;
 using System.IO;
 using TC_Prism.Models;
+using System.Threading;
 
 namespace TC_Prism.ViewModels
 {
     class MainWindowViewModel : BindableBase
     {
+
+        private TcAdsClient _tcAds = null;
+        AdsStream readStream = new AdsStream(sizeof(UInt32));
+
         private Services.IConnectionList _connectionList = null;
 
         // constructor dependency injection
@@ -50,11 +55,34 @@ namespace TC_Prism.ViewModels
         {
             if(_selectedConnection != null)
             {
-                TcAdsClient tcAds = new TcAdsClient();
-                tcAds.Connect(_selectedConnection.AdsAddress, 801);
-                if (tcAds.IsConnected)
+                _tcAds = new TcAdsClient();
+
+                Task resultString = Task.Factory.StartNew(() =>
+                 {
+                     ConnectADS(_tcAds, _selectedConnection.AdsAddress);
+                 });
+            }
+        }
+
+        private void ConnectADS(TcAdsClient adsClient, string adsAddress)
+        {
+
+            adsClient.Connect(adsAddress, 851);
+            if (adsClient.IsConnected)
+            {
+                Console.WriteLine("Connected");
+                adsClient.AdsNotification += Client_AdsNotification;
+
+                int notificationHandle = 0;
+                try
                 {
-                    Debug.WriteLine("Connected");
+                    notificationHandle = adsClient.AddDeviceNotification("MAIN.Blinker", readStream, AdsTransMode.OnChange, 100, 0, null);
+                    Thread.Sleep(10000);
+                }
+                finally
+                {
+                    adsClient.DeleteDeviceNotification(notificationHandle);
+                    adsClient.AdsNotification -= Client_AdsNotification;
                 }
             }
         }
@@ -70,7 +98,21 @@ namespace TC_Prism.ViewModels
             }
         }
 
+        private void Client_AdsNotification(object sender, AdsNotificationEventArgs e)
+        {
+            int offset = (int)e.DataStream.Position;
+            int length = (int)e.DataStream.Length;
 
+            e.DataStream.Position = offset;
+            AdsBinaryReader reader = new AdsBinaryReader(e.DataStream);
+
+            // Read the Unmarshalled data
+            //byte[] data = reader.ReadBytes(length);
+
+            // Or here we know about UDINT type --> can be marshalled as UINT32
+            uint nCounter = reader.ReadUInt32();
+            Console.WriteLine(DateTime.Now.ToString()+" "+nCounter.ToString());
+        }
 
     }
 }
